@@ -1,0 +1,64 @@
+workspace(name = "bazel_multideps")
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+skylib_version = "1.0.3"
+http_archive(
+    name = "bazel_skylib",
+    sha256 = "1c531376ac7e5a180e0237938a2536de0c54d93f5c278634818e0efc952dd56c",
+    type = "tar.gz",
+    url = "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/{}/bazel-skylib-{}.tar.gz".format(skylib_version, skylib_version),
+)
+
+rules_scala_version = "71d7135808750623b2c9340704a23384de0caefd" # update this as needed
+http_archive(
+    name = "io_bazel_rules_scala",
+    sha256 = "120cfcc0823bcd0a2196d0bd9d26d14ad60965f9b71565542a631b412b04715d",
+    strip_prefix = "rules_scala-%s" % rules_scala_version,
+    type = "zip",
+    url = "https://github.com/bazelbuild/rules_scala/archive/%s.zip" % rules_scala_version,
+)
+
+
+# local_repository(
+#     name = "io_bazel_rules_scala",
+#     path = "../bazelbuild/rules_scala"
+# )
+
+# load("@io_bazel_rules_scala//:version.bzl", "bazel_version")
+# bazel_version(name = "bazel_version")
+
+load("@io_bazel_rules_scala//:scala_config.bzl", "scala_config")
+scala_config()
+
+load("@io_bazel_rules_scala//scala:toolchains.bzl", "scala_register_toolchains")
+scala_register_toolchains()
+
+load("@io_bazel_rules_scala//scala:scala.bzl", "scala_repositories")
+scala_repositories()
+
+protobuf_version="3.11.3"
+protobuf_version_sha256="cf754718b0aa945b00550ed7962ddc167167bd922b842199eeb6505e6f344852"
+
+http_archive(
+    name = "com_google_protobuf",
+    url = "https://github.com/protocolbuffers/protobuf/archive/v%s.tar.gz" % protobuf_version,
+    strip_prefix = "protobuf-%s" % protobuf_version,
+    sha256 = protobuf_version_sha256,
+)
+
+# Dependencies needed for google_protobuf.
+# You may need to modify this if your project uses google_protobuf for other purposes.
+load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
+protobuf_deps()
+
+
+# For bazel-multideps
+load("//3rdparty:jvm_deps.bzl", "jvm_deps")
+jvm_deps()
+load("@maven//:jvm_deps.bzl", "load_jvm_deps")
+load_jvm_deps()
+
+local_repository(
+    name = "twitter_rules_jvm_export",
+    path = "../rules_jvm_export"
+)
